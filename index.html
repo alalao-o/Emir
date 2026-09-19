@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Aventura del Inglés: el Huevo Secreto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#150f2e;
+    --bg-mid:#2a1f5e;
+    --panel:#1f1b3f;
+    --panel-edge:#0d0a1f;
+    --ink:#f7f3ff;
+    --ink-soft:#a9a3d1;
+    --gold:#ffd23f;
+    --gold-deep:#e0a72e;
+    --teal:#2ee6a6;
+    --coral:#ff5d73;
+    --lilac:#b18cff;
+    --dot-off:#352f63;
+  }
+  :root[data-theme="light"]{
+    --bg-deep:#dfe0f7;
+    --bg-mid:#c9caf0;
+    --panel:#f7f6ff;
+    --panel-edge:#c3c2e8;
+    --ink:#1f1b3f;
+    --ink-soft:#5b567f;
+    --dot-off:#d3d1f0;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:'Inter',sans-serif;
+    background:
+      radial-gradient(circle at 18% 12%, rgba(255,255,255,0.10) 0, transparent 45%),
+      radial-gradient(circle at 82% 78%, rgba(177,140,255,0.18) 0, transparent 50%),
+      linear-gradient(160deg, var(--bg-deep), var(--bg-mid));
+    min-height:100%;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:28px 14px 40px;
+    color:var(--ink);
+    position:relative;
+    overflow-x:hidden;
+  }
+
+  .stars{position:fixed;inset:0;pointer-events:none;z-index:0;}
+  .stars span{
+    position:absolute;width:3px;height:3px;background:var(--ink);
+    border-radius:50%;opacity:.5;
+    animation:twinkle 3.2s ease-in-out infinite;
+  }
+  @keyframes twinkle{0%,100%{opacity:.15;}50%{opacity:.75;}}
+
+  .console{
+    position:relative;
+    z-index:1;
+    width:100%;
+    max-width:400px;
+    background:var(--panel);
+    border-radius:18px;
+    padding:22px 18px 26px;
+    box-shadow:
+      0 0 0 4px var(--panel-edge),
+      0 0 0 8px rgba(255,210,63,0.35),
+      0 18px 40px rgba(0,0,0,0.45);
+  }
+
+  .brand{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    font-size:1.35rem;
+    text-align:center;
+    margin:0 0 2px;
+    letter-spacing:.2px;
+  }
+  .brand span{color:var(--gold);}
+  .tagline{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:.85rem;
+    margin:0 0 18px;
+    line-height:1.5;
+  }
+
+  .screen{display:none;flex-direction:column;align-items:center;}
+  .screen.active{display:flex;}
+
+  canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block;}
+
+  #charCanvas{width:120px;height:160px;margin:6px auto 10px;animation:bob 2.6s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+
+  .primary-btn{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:1.05rem;
+    color:#241a00;
+    background:linear-gradient(180deg,#ffe27a,var(--gold));
+    border:none;
+    border-radius:12px;
+    padding:14px 26px;
+    cursor:pointer;
+    box-shadow:0 4px 0 var(--gold-deep), 0 10px 18px rgba(0,0,0,0.35);
+    transition:transform .08s ease;
+    min-height:48px;
+  }
+  .primary-btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--gold-deep);}
+
+  .ghost-btn{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:.85rem;
+    color:var(--ink-soft);
+    background:transparent;
+    border:1px solid var(--dot-off);
+    border-radius:10px;
+    padding:9px 16px;
+    cursor:pointer;
+    margin-top:10px;
+  }
+
+  /* progress trail */
+  .trail{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;}
+  .dot{
+    width:26px;height:26px;border-radius:50%;
+    background:var(--dot-off);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Baloo 2',sans-serif;font-weight:700;font-size:.78rem;
+    color:var(--ink-soft);
+    border:2px solid transparent;
+    transition:all .25s ease;
+  }
+  .dot.active{background:var(--lilac);color:#1a1230;border-color:var(--gold);}
+  .dot.done{background:var(--teal);color:#0a2b1e;}
+  .dot-line{width:14px;height:2px;background:var(--dot-off);}
+
+  .level-num{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    font-size:.95rem;
+    color:var(--ink-soft);
+    margin:0 0 4px;
+    text-align:center;
+  }
+
+  .number-badge{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    font-size:2.6rem;
+    color:var(--gold);
+    text-align:center;
+    line-height:1;
+    margin:2px 0 6px;
+    text-shadow:0 3px 0 var(--gold-deep);
+  }
+
+  .question{
+    text-align:center;
+    font-size:.95rem;
+    color:var(--ink);
+    margin:0 0 16px;
+    line-height:1.5;
+  }
+
+  .options{width:100%;display:flex;flex-direction:column;gap:10px;margin-bottom:6px;}
+  .opt-btn{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:1rem;
+    color:var(--ink);
+    background:rgba(255,255,255,0.04);
+    border:2px solid var(--dot-off);
+    border-radius:12px;
+    padding:13px 16px;
+    text-align:left;
+    cursor:pointer;
+    min-height:48px;
+    transition:border-color .15s ease, transform .08s ease, background .15s ease;
+  }
+  :root[data-theme="light"] .opt-btn{background:rgba(0,0,0,0.02);}
+  .opt-btn:active{transform:scale(0.98);}
+  .opt-btn.correct{border-color:var(--teal);background:rgba(46,230,166,0.14);color:var(--teal);}
+  .opt-btn.wrong{border-color:var(--coral);background:rgba(255,93,115,0.14);color:var(--coral);animation:shake .35s ease;}
+  .opt-btn.disabled{pointer-events:none;opacity:.55;}
+  @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+
+  .feedback{
+    min-height:20px;
+    text-align:center;
+    font-size:.85rem;
+    font-weight:600;
+    margin-top:2px;
+  }
+  .feedback.ok{color:var(--teal);}
+  .feedback.bad{color:var(--coral);}
+
+  /* victory */
+  #eggCanvas{width:150px;height:162px;margin:8px auto 4px;}
+  .egg-glow{
+    position:relative;
+    display:flex;justify-content:center;
+  }
+  .sparkle-field{position:absolute;inset:-14px;pointer-events:none;}
+  .sparkle-field span{
+    position:absolute;font-size:14px;
+    animation:pop .9s ease forwards;
+    opacity:0;
+  }
+  @keyframes pop{
+    0%{opacity:0;transform:scale(.2) translateY(0);}
+    35%{opacity:1;transform:scale(1) translateY(-4px);}
+    100%{opacity:0;transform:scale(.6) translateY(-18px);}
+  }
+
+  .victory-title{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    font-size:1.3rem;
+    text-align:center;
+    color:var(--gold);
+    margin:8px 0 4px;
+  }
+  .victory-sub{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:.88rem;
+    margin:0 0 18px;
+    line-height:1.55;
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<div class="console">
+  <p class="brand">Aventura del <span>Inglés</span></p>
+  <p class="tagline">Supera los 5 niveles y descubre el Huevo Secreto</p>
+
+  <!-- START -->
+  <div class="screen active" id="screen-start">
+    <canvas id="charCanvas" width="30" height="40"></canvas>
+    <button class="primary-btn" id="btnStart">¡Comenzar aventura!</button>
+  </div>
+
+  <!-- LEVEL -->
+  <div class="screen" id="screen-level">
+    <div class="trail" id="trail"></div>
+    <p class="level-num" id="levelLabel">Nivel 1 de 5</p>
+    <div class="number-badge" id="numberBadge">4</div>
+    <p class="question" id="questionText">¿Cómo se escribe este número en inglés?</p>
+    <div class="options" id="optionsWrap"></div>
+    <p class="feedback" id="feedback"></p>
+  </div>
+
+  <!-- VICTORY -->
+  <div class="screen" id="screen-victory">
+    <div class="egg-glow">
+      <canvas id="eggCanvas" width="13" height="14"></canvas>
+      <div class="sparkle-field" id="sparkleField"></div>
+    </div>
+    <p class="victory-title">¡Has ganado el Huevo Secreto! 🥚</p>
+    <p class="victory-sub">Completaste los 5 niveles de inglés. El Huevo Secreto brilla en tu inventario, esperando eclosionar.</p>
+    <button class="primary-btn" id="btnRestart">Jugar de nuevo</button>
+  </div>
+</div>
+
+<script>
+(function(){
+
+  /* ---------- background stars ---------- */
+  var starsWrap = document.getElementById('stars');
+  for (var i = 0; i < 26; i++){
+    var s = document.createElement('span');
+    s.style.left = Math.random()*100 + '%';
+    s.style.top = Math.random()*100 + '%';
+    s.style.animationDelay = (Math.random()*3).toFixed(2) + 's';
+    starsWrap.appendChild(s);
+  }
+
+  /* ---------- levels data ---------- */
+  var LEVELS = [
+    { number: 4,  question: '¿Cómo se escribe el número 4 en inglés?',  options: ['four','for','fourty'],    correct: 'four' },
+    { number: 8,  question: '¿Cómo se escribe el número 8 en inglés?',  options: ['eight','eigth','eighty'], correct: 'eight' },
+    { number: 11, question: '¿Cómo se escribe el número 11 en inglés?', options: ['eleven','elevn','aleven'],correct: 'eleven' },
+    { number: 15, question: '¿Cómo se escribe el número 15 en inglés?', options: ['fifteen','fiveteen','fifty'], correct: 'fifteen' },
+    { number: 19, question: '¿Cómo se escribe el número 19 en inglés?', options: ['nineteen','ninteen','ninety'], correct: 'nineteen' }
+  ];
+
+  var state = { level: 0 };
+
+  function shuffle(arr){
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  /* ---------- pixel character (canvas 30x40) ---------- */
+  function drawCharacter(ctx){
+    ctx.clearRect(0,0,30,40);
+    function block(x,y,w,h,fill){
+      ctx.fillStyle = fill;
+      ctx.fillRect(x,y,w,h);
+      ctx.strokeStyle = 'rgba(13,10,31,0.55)';
+      ctx.lineWidth = 0.6;
+      ctx.strokeRect(x,y,w,h);
+    }
+    var skin = '#f4c9a0';
+    var hair = '#4a2f19';
+    var shirt = '#3fa7d6';
+    var pants = '#2a3d66';
+    var shoe = '#22252a';
+    var eye = '#22252a';
+
+    block(3,14,4,11,skin);   // left arm
+    block(23,14,4,11,skin);  // right arm
+    block(7,13,16,13,shirt); // torso
+    block(9,27,5,11,pants);  // left leg
+    block(16,27,5,11,pants); // right leg
+    block(8,37,7,3,shoe);    // left shoe
+    block(15,37,7,3,shoe);   // right shoe
+    block(9,2,12,11,skin);   // head
+    block(8,0,14,3,hair);    // hair
+    block(12,7,2,2,eye);     // left eye
+    block(16,7,2,2,eye);     // right eye
+  }
+
+  /* ---------- pixel egg (canvas 13x14, generated grid) ---------- */
+  function buildEggRows(){
+    var widths = [3,5,7,9,9,11,11,11,11,9,9,7,5,3];
+    var purpleRows = {6:true,7:true};
+    var cols = 13;
+    return widths.map(function(w,i){
+      var pad = (cols - w)/2;
+      var fillChar = purpleRows[i] ? 'p' : 'g';
+      var filled = 'y' + new Array(w).join(fillChar); // 1 y + (w-1) fillChar = w total
+      return new Array(pad+1).join('.') + filled + new Array(pad+1).join('.');
+    });
+  }
+  var EGG_ROWS = buildEggRows();
+  var EGG_COLORS = { y: '#ffe28a', g: '#f4c95d', p: '#8b5cf6' };
+
+  function drawEgg(ctx){
+    ctx.clearRect(0,0,13,14);
+    for (var r = 0; r < EGG_ROWS.length; r++){
+      var row = EGG_ROWS[r];
+      for (var c = 0; c < row.length; c++){
+        var ch = row[c];
+        if (ch === '.') continue;
+        ctx.fillStyle = EGG_COLORS[ch];
+        ctx.fillRect(c, r, 1, 1);
+      }
+    }
+  }
+
+  var charCtx = document.getElementById('charCanvas').getContext('2d');
+  drawCharacter(charCtx);
+
+  /* ---------- screens ---------- */
+  var screens = {
+    start: document.getElementById('screen-start'),
+    level: document.getElementById('screen-level'),
+    victory: document.getElementById('screen-victory')
+  };
+  function showScreen(name){
+    Object.keys(screens).forEach(function(k){
+      screens[k].classList.toggle('active', k === name);
+    });
+  }
+
+  /* ---------- trail dots ---------- */
+  var trailEl = document.getElementById('trail');
+  function renderTrail(){
+    trailEl.innerHTML = '';
+    LEVELS.forEach(function(_, i){
+      if (i > 0){
+        var line = document.createElement('div');
+        line.className = 'dot-line';
+        trailEl.appendChild(line);
+      }
+      var d = document.createElement('div');
+      d.className = 'dot' + (i < state.level ? ' done' : i === state.level ? ' active' : '');
+      d.textContent = i < state.level ? '✓' : (i+1);
+      trailEl.appendChild(d);
+    });
+  }
+
+  /* ---------- level rendering ---------- */
+  var levelLabel = document.getElementById('levelLabel');
+  var numberBadge = document.getElementById('numberBadge');
+  var questionText = document.getElementById('questionText');
+  var optionsWrap = document.getElementById('optionsWrap');
+  var feedback = document.getElementById('feedback');
+
+  function renderLevel(){
+    var lv = LEVELS[state.level];
+    levelLabel.textContent = 'Nivel ' + (state.level + 1) + ' de ' + LEVELS.length;
+    numberBadge.textContent = lv.number;
+    questionText.textContent = lv.question;
+    feedback.textContent = '';
+    feedback.className = 'feedback';
+    renderTrail();
+
+    optionsWrap.innerHTML = '';
+    var opts = shuffle(lv.options);
+    opts.forEach(function(optText){
+      var btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.textContent = optText;
+      btn.addEventListener('click', function(){ handleAnswer(optText, lv.correct, btn); });
+      optionsWrap.appendChild(btn);
+    });
+  }
+
+  function handleAnswer(selected, correct, btnEl){
+    var allBtns = optionsWrap.querySelectorAll('.opt-btn');
+    if (selected === correct){
+      allBtns.forEach(function(b){ b.classList.add('disabled'); });
+      btnEl.classList.add('correct');
+      feedback.textContent = '¡Correcto! 🎉';
+      feedback.className = 'feedback ok';
+      setTimeout(function(){
+        state.level++;
+        if (state.level >= LEVELS.length){
+          renderVictory();
+          showScreen('victory');
+        } else {
+          renderLevel();
+        }
+      }, 850);
+    } else {
+      btnEl.classList.add('wrong');
+      feedback.textContent = 'Casi... ¡inténtalo de nuevo!';
+      feedback.className = 'feedback bad';
+      setTimeout(function(){ btnEl.classList.remove('wrong'); }, 400);
+    }
+  }
+
+  /* ---------- victory ---------- */
+  var sparkleField = document.getElementById('sparkleField');
+  function renderVictory(){
+    var eggCtx = document.getElementById('eggCanvas').getContext('2d');
+    drawEgg(eggCtx);
+    sparkleField.innerHTML = '';
+    var glyphs = ['✨','⭐','💫'];
+    for (var i = 0; i < 10; i++){
+      var sp = document.createElement('span');
+      sp.textContent = glyphs[Math.floor(Math.random()*glyphs.length)];
+      sp.style.left = (10 + Math.random()*80) + '%';
+      sp.style.top = (10 + Math.random()*80) + '%';
+      sp.style.animationDelay = (Math.random()*0.6).toFixed(2) + 's';
+      sparkleField.appendChild(sp);
+    }
+  }
+
+  /* ---------- controls ---------- */
+  document.getElementById('btnStart').addEventListener('click', function(){
+    state.level = 0;
+    renderLevel();
+    showScreen('level');
+  });
+  document.getElementById('btnRestart').addEventListener('click', function(){
+    state.level = 0;
+    showScreen('start');
+  });
+
+})();
+</script>
+</body>
+</html>
